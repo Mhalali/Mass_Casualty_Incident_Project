@@ -20,10 +20,12 @@ openai.api_key = OPENAI_API_KEY
 # Discord bot setup with intents
 intents = discord.Intents.default()
 intents.voice_states = True
+intents.messages = True  # Enable message intent for text logging
+intents.message_content = True  # Enable reading message content
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # TTS (Text-to-Speech) function
-def text_to_speech(text):
+def text_to_speech(text, voice_channel):
     speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)
     audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=True)
     
@@ -36,31 +38,23 @@ def text_to_speech(text):
         cancellation_details = result.cancellation_details
         print(f"Speech synthesis canceled: {cancellation_details.reason}")
 
-# Continuous STT (Speech-to-Text) function
-def speech_to_text_continuous():
+# STT (Speech-to-Text) function
+def speech_to_text():
     speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)
-    
-    # Set up audio configuration (default microphone, ensuring it's in the correct format)
-    audio_format = speechsdk.audio.AudioStreamFormat(samples_per_second=16000, bits_per_sample=16, channels=1)
-    audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True, audio_stream_format=audio_format)
-    
-    # Set up the recognizer
+    audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
+
+    # Set up recognizer for the microphone input
     speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
-    
-    # Callback for recognized speech
-    def recognized_cb(evt):
-        print(f"RECOGNIZED: {evt.result.text}")
-        return evt.result.text
-    
-    # Connect to the recognizer event
-    speech_recognizer.recognized.connect(recognized_cb)
 
-    print("Starting continuous recognition...")
-    speech_recognizer.start_continuous_recognition()
+    print("Listening for speech...")
+    result = speech_recognizer.recognize_once()
 
-    # Keep the recognition session active
-    while True:
-        asyncio.sleep(1)
+    if result.reason == speechsdk.ResultReason.RecognizedSpeech:
+        print(f"Recognized: {result.text}")
+        return result.text
+    else:
+        print("No speech could be recognized")
+        return None
 
 # GPT response function
 def generate_gpt_response(user_input):
@@ -77,6 +71,26 @@ def generate_gpt_response(user_input):
         print(f"OpenAI API error: {e}")
         return "There was an error generating a response."
 
+# Capture voice, transcribe it, log, and respond
+async def handle_voice_session(channel, voice_client):
+    # Capture voice and transcribe it
+    transcribed_text = speech_to_text()
+    
+    # Log the transcription in a text channel
+    text_channel = discord.utils.get(channel.guild.text_channels, name='session-logs')  # Ensure a text channel named 'session-logs' exists
+    if text_channel:
+        await text_channel.send(f"**Transcription**: {transcribed_text}")
+    
+    if transcribed_text:
+        # Pass the transcription to GPT for analysis
+        gpt_response = generate_gpt_response(transcribed_text)
+
+        # Log the GPT response
+        await text_channel.send(f"**GPT Response**: {gpt_response}")
+
+        # Play the GPT response back in the voice channel
+        text_to_speech(gpt_response, channel)
+
 # Voice event handler
 @bot.event
 async def on_voice_state_update(member, before, after):
@@ -87,16 +101,8 @@ async def on_voice_state_update(member, before, after):
         if voice_client is None:
             voice_client = await after.channel.connect()
 
-        # Introduce the game
-        text_to_speech("Welcome to the Mass Casualty Incident simulation. Please speak now.")
-
-        # Start listening continuously for speech
-        speech_to_text_continuous()
-
-        # Keep the bot connected but stop active speech recognition after a while
-        await asyncio.sleep(600)  # Keeps the bot listening for 10 minutes
-
-        # Bot will remain connected to the voice channel unless disconnected manually
+        # Start handling the voice session (transcribe, log, GPT analyze, and respond)
+        await handle_voice_session(after.channel, voice_client)
 
 # Error handler
 @bot.event
