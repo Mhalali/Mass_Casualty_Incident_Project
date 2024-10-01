@@ -2,15 +2,11 @@ import discord
 from discord.ext import commands
 import os
 import openai
-import azure.cognitiveservices.speech as speechsdk
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
-SPEECH_KEY = os.getenv('SPEECH_KEY')
-SPEECH_REGION = "uaenorth"  # Azure region
-
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 # Set up OpenAI API key
@@ -18,47 +14,9 @@ openai.api_key = OPENAI_API_KEY
 
 # Discord bot setup with intents
 intents = discord.Intents.default()
-intents.voice_states = True
-intents.messages = True  # Enable message intent for text logging
+intents.messages = True  # Enable messages intent
 intents.message_content = True  # Enable reading message content
 bot = commands.Bot(command_prefix="!", intents=intents)
-
-# TTS (Text-to-Speech) function
-def text_to_speech(text, voice_channel):
-    speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)
-    audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=True)
-    
-    speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
-    result = speech_synthesizer.speak_text_async(text).get()
-    
-    if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-        print("Speech synthesis completed.")
-    elif result.reason == speechsdk.ResultReason.Canceled:
-        cancellation_details = result.cancellation_details
-        print(f"Speech synthesis canceled: {cancellation_details.reason}")
-
-# STT (Speech-to-Text) function using pre-recorded .wav file
-def speech_to_text():
-    speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)
-    
-    # Use a pre-recorded .wav file (replace with the actual file path)
-    audio_config = speechsdk.audio.AudioConfig(filename="test_audio.wav")
-    
-    speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
-
-    print("Processing audio file...")
-    result = speech_recognizer.recognize_once()
-
-    if result.reason == speechsdk.ResultReason.RecognizedSpeech:
-        print(f"Recognized: {result.text}")
-        return result.text
-    elif result.reason == speechsdk.ResultReason.NoMatch:
-        print("No speech could be recognized")
-    elif result.reason == speechsdk.ResultReason.Canceled:
-        cancellation_details = result.cancellation_details
-        print(f"Speech recognition canceled: {cancellation_details.reason}")
-        print(f"Error details: {cancellation_details.error_details}")
-    return None
 
 # GPT response function
 def generate_gpt_response(user_input):
@@ -75,38 +33,23 @@ def generate_gpt_response(user_input):
         print(f"OpenAI API error: {e}")
         return "There was an error generating a response."
 
-# Handle voice session by using pre-recorded audio
-async def handle_voice_session(channel, voice_client):
-    # Simulate voice transcription using a pre-recorded audio file
-    transcribed_text = speech_to_text()
-    
-    # Log the transcription in a text channel
-    text_channel = discord.utils.get(channel.guild.text_channels, name='session-logs')  # Ensure a text channel named 'session-logs' exists
-    if text_channel:
-        await text_channel.send(f"**Transcription**: {transcribed_text}")
-    
-    if transcribed_text:
-        # Pass the transcription to GPT for analysis
-        gpt_response = generate_gpt_response(transcribed_text)
-
-        # Log the GPT response
-        await text_channel.send(f"**GPT Response**: {gpt_response}")
-
-        # Play the GPT response back in the voice channel
-        text_to_speech(gpt_response, channel)
-
-# Voice event handler
+# Handle incoming text messages
 @bot.event
-async def on_voice_state_update(member, before, after):
-    if after.channel is not None and not member.bot:  # If a real user joins
-        print(f"{member.name} joined {after.channel.name}")
+async def on_message(message):
+    # Ignore messages from the bot itself
+    if message.author == bot.user:
+        return
+    
+    # Process user messages
+    if message.content:
+        # Simulate transcription by using the message content
+        user_input = message.content
         
-        voice_client = discord.utils.get(bot.voice_clients, guild=after.channel.guild)
-        if voice_client is None:
-            voice_client = await after.channel.connect()
+        # Generate a GPT response based on the user's input
+        gpt_response = generate_gpt_response(user_input)
 
-        # Start handling the voice session (transcribe, log, GPT analyze, and respond)
-        await handle_voice_session(after.channel, voice_client)
+        # Respond in the same text channel
+        await message.channel.send(f"**GPT Response**: {gpt_response}")
 
 # Error handler
 @bot.event
