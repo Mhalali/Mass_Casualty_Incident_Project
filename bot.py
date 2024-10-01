@@ -1,9 +1,10 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import os
 import openai
 import azure.cognitiveservices.speech as speechsdk
 from dotenv import load_dotenv
+import asyncio
 
 # Load environment variables
 load_dotenv()
@@ -39,11 +40,9 @@ def speech_to_text(use_audio_file=False):
     speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)
     
     if use_audio_file:
-        # Use pre-recorded audio file instead of microphone for debugging purposes
-        audio_config = speechsdk.AudioConfig(filename="test.wav")
+        audio_config = speechsdk.AudioConfig(filename="test.wav")  # For testing with audio file
     else:
-        # Use default microphone
-        audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
+        audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)  # Using microphone
     
     speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
 
@@ -58,10 +57,9 @@ def speech_to_text(use_audio_file=False):
     elif result.reason == speechsdk.ResultReason.Canceled:
         cancellation_details = result.cancellation_details
         print(f"Speech recognition canceled: {cancellation_details.reason}")
-        print(f"Error details: {cancellation_details.error_details}")
     return None
 
-# OpenAI GPT response function
+# GPT response function
 def generate_gpt_response(user_input):
     try:
         response = openai.ChatCompletion.create(
@@ -81,23 +79,44 @@ def generate_gpt_response(user_input):
 async def on_voice_state_update(member, before, after):
     if after.channel is not None and not member.bot:  # If a real user joins
         print(f"{member.name} joined {after.channel.name}")
-
+        
         voice_client = discord.utils.get(bot.voice_clients, guild=after.channel.guild)
-        if voice_client is None:  # If bot is not already in the channel
+        if voice_client is None:
+            # Bot joins the voice channel
             voice_client = await after.channel.connect()
 
         # Introduce the game
         text_to_speech("Welcome to the Mass Casualty Incident simulation. Please speak now.")
         
-        # Listen for user speech and process it (change 'use_audio_file=True' for testing with an audio file)
-        recognized_text = speech_to_text(use_audio_file=False)
+        # Start idle timer (10 minutes)
+        idle_timer.start(after.channel.guild)
+
+        # Listen for user speech
+        recognized_text = speech_to_text()
         if recognized_text:
             gpt_response = generate_gpt_response(recognized_text)
-            print(f"GPT Response: {gpt_response}")
-            text_to_speech(gpt_response)  # Respond using TTS
+            text_to_speech(gpt_response)
+            idle_timer.stop()  # Stop the idle timer when interaction happens
 
-        # Disconnect after responding
-        await voice_client.disconnect()
+# Idle timer task to check for inactivity
+@tasks.loop(minutes=10)
+async def idle_timer(guild):
+    # After 10 minutes of no activity, the bot sends a message to the text channel and stops listening
+    text_channel = discord.utils.get(guild.text_channels, name='session-updates')
+    if text_channel:
+        await text_channel.send(f"Bot has been idle in the voice channel for 10 minutes. Feel free to ask questions here.")
+    
+    # The bot stays connected to the voice channel but relocates its interactions to the text channel
+
+# Error handler
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send("Command not found.")
+    elif isinstance(error, commands.MissingPermissions):
+        await ctx.send("You do not have the necessary permissions to run this command.")
+    else:
+        await ctx.send(f"An error occurred: {str(error)}")
 
 # Start the bot
 bot.run(DISCORD_TOKEN)
