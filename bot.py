@@ -34,10 +34,17 @@ def text_to_speech(text):
         cancellation_details = result.cancellation_details
         print(f"Speech synthesis canceled: {cancellation_details.reason}")
 
-# STT (Speech-to-Text) function
-def speech_to_text():
+# STT (Speech-to-Text) function with optional audio file for testing
+def speech_to_text(use_audio_file=False):
     speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)
-    audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
+    
+    if use_audio_file:
+        # Use pre-recorded audio file instead of microphone for debugging purposes
+        audio_config = speechsdk.AudioConfig(filename="test.wav")
+    else:
+        # Use default microphone
+        audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
+    
     speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
 
     print("Listening for speech...")
@@ -51,7 +58,8 @@ def speech_to_text():
     elif result.reason == speechsdk.ResultReason.Canceled:
         cancellation_details = result.cancellation_details
         print(f"Speech recognition canceled: {cancellation_details.reason}")
-        return None
+        print(f"Error details: {cancellation_details.error_details}")
+    return None
 
 # OpenAI GPT response function
 def generate_gpt_response(user_input):
@@ -81,8 +89,8 @@ async def on_voice_state_update(member, before, after):
         # Introduce the game
         text_to_speech("Welcome to the Mass Casualty Incident simulation. Please speak now.")
         
-        # Listen for user speech and process it
-        recognized_text = speech_to_text()
+        # Listen for user speech and process it (change 'use_audio_file=True' for testing with an audio file)
+        recognized_text = speech_to_text(use_audio_file=False)
         if recognized_text:
             gpt_response = generate_gpt_response(recognized_text)
             print(f"GPT Response: {gpt_response}")
