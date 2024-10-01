@@ -4,13 +4,12 @@ import os
 import openai
 import azure.cognitiveservices.speech as speechsdk
 from dotenv import load_dotenv
-import asyncio
 
 # Load environment variables
 load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 SPEECH_KEY = os.getenv('SPEECH_KEY')
-SPEECH_REGION = "uaenorth"  # Set to your Azure region (uaenorth)
+SPEECH_REGION = "uaenorth"  # Azure region
 
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
@@ -38,23 +37,28 @@ def text_to_speech(text, voice_channel):
         cancellation_details = result.cancellation_details
         print(f"Speech synthesis canceled: {cancellation_details.reason}")
 
-# STT (Speech-to-Text) function
+# STT (Speech-to-Text) function using pre-recorded .wav file
 def speech_to_text():
     speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)
-    audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
-
-    # Set up recognizer for the microphone input
+    
+    # Use a pre-recorded .wav file (replace with the actual file path)
+    audio_config = speechsdk.audio.AudioConfig(filename="test_audio.wav")
+    
     speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
 
-    print("Listening for speech...")
+    print("Processing audio file...")
     result = speech_recognizer.recognize_once()
 
     if result.reason == speechsdk.ResultReason.RecognizedSpeech:
         print(f"Recognized: {result.text}")
         return result.text
-    else:
+    elif result.reason == speechsdk.ResultReason.NoMatch:
         print("No speech could be recognized")
-        return None
+    elif result.reason == speechsdk.ResultReason.Canceled:
+        cancellation_details = result.cancellation_details
+        print(f"Speech recognition canceled: {cancellation_details.reason}")
+        print(f"Error details: {cancellation_details.error_details}")
+    return None
 
 # GPT response function
 def generate_gpt_response(user_input):
@@ -71,9 +75,9 @@ def generate_gpt_response(user_input):
         print(f"OpenAI API error: {e}")
         return "There was an error generating a response."
 
-# Capture voice, transcribe it, log, and respond
+# Handle voice session by using pre-recorded audio
 async def handle_voice_session(channel, voice_client):
-    # Capture voice and transcribe it
+    # Simulate voice transcription using a pre-recorded audio file
     transcribed_text = speech_to_text()
     
     # Log the transcription in a text channel
