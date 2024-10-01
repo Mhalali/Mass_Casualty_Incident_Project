@@ -3,7 +3,6 @@ from discord.ext import commands
 import os
 import openai
 from dotenv import load_dotenv
-import asyncio
 
 # Load environment variables
 load_dotenv()
@@ -15,9 +14,8 @@ openai.api_key = OPENAI_API_KEY
 
 # Discord bot setup with intents
 intents = discord.Intents.default()
-intents.voice_states = True  # Enable voice state tracking
-intents.messages = True      # Enable message tracking
-intents.message_content = True
+intents.messages = True  # Enable messages intent
+intents.message_content = True  # Enable reading message content
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # GPT response function
@@ -35,54 +33,84 @@ def generate_gpt_response(user_input):
         print(f"OpenAI API error: {e}")
         return "There was an error generating a response."
 
-# TTS (Text-to-Speech) function
-def text_to_speech(text):
-    # Simulated TTS, prints the message to console for now
-    print(f"TTS: {text}")
+# Demo stages function
+async def run_demo_stages(channel, member):
+    # Stage 1: Welcome Message
+    welcome_message = (
+        f"Welcome, {member.mention}, to the Mass Casualty Incident Simulation Demo! "
+        "You are now participating in a critical response scenario where your decisions will shape the outcome. "
+        "Let's begin!"
+    )
+    await channel.send(welcome_message)
 
-# Handle voice state updates for the demo
-@bot.event
-async def on_voice_state_update(member, before, after):
-    if after.channel and after.channel.name == "demo" and not member.bot:
-        # Send welcome message when a user joins the demo channel
-        text_channel = discord.utils.get(after.channel.guild.text_channels, name='demo')
-        if text_channel:
-            await text_channel.send(f"Welcome {member.name} to the Mass Casualty Incident simulation.")
-            await text_channel.send("You're the only doctor on the scene. The weather is bad, and you're the first responder.")
-            text_to_speech("Welcome to the Mass Casualty Incident simulation. You're the only doctor on the scene.")
+    # Stage 2: Simulated Scenario Start
+    scenario_intro = (
+        "You hear the sound of an explosion. The scene is chaotic, and people are injured all around. "
+        "You are the only medical professional available. What will you do first?"
+    )
+    await channel.send(scenario_intro)
 
-        # Start the demo stages
-        await run_demo_stages(member, text_channel)
+    # Wait for user response (as if it was a real scenario)
+    def check(m):
+        return m.author == member and m.channel == channel
 
-# Demo stages
-async def run_demo_stages(member, text_channel):
-    stages = [
-        "Stage 1: A massive car accident has just happened. Multiple patients need assistance.",
-        "Stage 2: You approach the victims. Some are more critical than others.",
-        "Stage 3: The weather worsens, making it difficult to treat patients.",
-        "Stage 4: You prioritize patients and call for help.",
-        "Stage 5: The ambulance arrives and takes over."
-    ]
-    
-    for stage in stages:
-        await text_channel.send(stage)
-        text_to_speech(stage)
-        await asyncio.sleep(10)  # Pause between stages for realism
-    
-    await end_demo(member, text_channel)
-
-# End demo and PM the summary
-async def end_demo(member, text_channel):
-    await text_channel.send(f"Demo finished. Thank you for participating, {member.name}!")
-    
-    summary = "You successfully completed the Mass Casualty Incident simulation. You prioritized patients under extreme conditions and coordinated the response. Well done!"
-    github_link = "https://github.com/Mhalali/Mass_Casualty_Incident_Project"
-    
-    # Send a PM with the summary and GitHub link
     try:
-        await member.send(f"Thank you for participating in the demo, {member.name}.\n\n{summary}\n\nFor more information, visit: {github_link}")
+        user_message = await bot.wait_for('message', check=check, timeout=60)
+    except asyncio.TimeoutError:
+        await channel.send("Time's up! In a real scenario, delays can be costly.")
+        return
+
+    # Stage 3: GPT Response to User Action
+    gpt_response = generate_gpt_response(user_message.content)
+    await channel.send(f"**GPT Response**: {gpt_response}")
+
+    # Stage 4: Scenario Escalation
+    escalation_message = (
+        "Suddenly, the weather worsens. Rain is pouring, and some of the patients are at risk of hypothermia. "
+        "You must make critical decisions quickly. How will you handle the situation?"
+    )
+    await channel.send(escalation_message)
+
+    try:
+        user_message = await bot.wait_for('message', check=check, timeout=60)
+    except asyncio.TimeoutError:
+        await channel.send("Time's up! The situation has worsened.")
+        return
+
+    # Stage 5: GPT Response to User's Second Action
+    gpt_response = generate_gpt_response(user_message.content)
+    await channel.send(f"**GPT Response**: {gpt_response}")
+
+    # Stage 6: Scenario Conclusion
+    conclusion_message = (
+        "The emergency services have arrived. The patients are being transported to the hospital, and the scene is stabilizing. "
+        "Great job handling the situation under pressure!"
+    )
+    await channel.send(conclusion_message)
+
+    # Send a PM to the user with a summary and link to GitHub
+    summary_message = (
+        f"Thank you for participating in the demo, {member.mention}. "
+        "You can review the scenario in the `#demo` channel, and check out our GitHub for more details:\n"
+        "https://github.com/Mhalali/Mass_Casualty_Incident_Project"
+    )
+    try:
+        await member.send(summary_message)
     except discord.Forbidden:
-        await text_channel.send(f"Could not send PM to {member.name}.")
+        await channel.send(f"Could not send a PM to {member.mention}, but here’s the GitHub link: https://github.com/Mhalali/Mass_Casualty_Incident_Project")
+
+# Event: User joins the #demo channel
+@bot.event
+async def on_message(message):
+    if message.author == bot.user:
+        return
+    
+    # If a user sends a message in #demo channel
+    if message.channel.name == 'demo':
+        await run_demo_stages(message.channel, message.author)
+
+    # Process other commands or responses normally
+    await bot.process_commands(message)
 
 # Error handler
 @bot.event
