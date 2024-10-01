@@ -26,18 +26,17 @@ game_start_time = {}
 # GPT response function (with NLP enhancements for the game)
 def generate_gpt_response(user_input, stage):
     try:
-        # Different responses based on the stage of the game
         if stage == 1:
-            prompt = f"You are a medical professional at the scene of a mass casualty incident. An explosion has occurred, and people are injured. {user_input}."
+            prompt = f"You are in a mass casualty incident with an explosion. The user said: '{user_input}'. What is the immediate response?"
         elif stage == 2:
-            prompt = f"The weather worsens, rain is pouring. Some patients are at risk of hypothermia. {user_input}. How do you handle this?"
+            prompt = f"The weather is worsening, rain is pouring, and patients are at risk of hypothermia. The user said: '{user_input}'. What should be done now?"
         else:
-            prompt = f"The situation is stabilizing. You are awaiting emergency services. {user_input}. What is your next move?"
+            prompt = f"The situation is stabilizing and emergency services are arriving. The user said: '{user_input}'. How should the situation conclude?"
 
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are assisting with a simulation."},
+                {"role": "system", "content": "You are assisting with a mass casualty simulation."},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -70,8 +69,7 @@ async def run_demo_stages(channel, member, stage):
     if stage == 1:
         welcome_message = (
             f"Welcome, {member.mention}, to the Mass Casualty Incident Simulation Demo! "
-            "You are now participating in a critical response scenario where your decisions will shape the outcome. "
-            "Let's begin! You hear the sound of an **explosion**. The scene is chaotic, and people are injured all around. "
+            "You hear the sound of an **explosion**. The scene is chaotic, and people are injured all around. "
             "You are the only medical professional available. What will you do first?"
         )
         await channel.send(welcome_message)
@@ -79,8 +77,8 @@ async def run_demo_stages(channel, member, stage):
 
     # Stage 2: Weather worsening
     elif stage == 2:
-        await channel.send("Suddenly, the weather worsens. **Rain** is pouring, and some of the **patients** are at risk of **hypothermia**. "
-                           "You must make critical decisions quickly. How will you handle the situation?")
+        await channel.send("The weather worsens. **Rain** is pouring, and some of the **patients** are at risk of **hypothermia**. "
+                           "What is your next course of action?")
         user_stage[member.id] = 3  # Move to next stage
 
     # Stage 3: Scenario Conclusion
