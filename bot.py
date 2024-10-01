@@ -19,15 +19,16 @@ intents.messages = True  # Enable messages intent
 intents.message_content = True  # Enable reading message content
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Dictionary to track user's current demo stage and start time
+# Dictionary to track user's current demo stage, start time, and performance
 user_stage = {}
 game_start_time = {}
+user_performance = {}
 
-# GPT response function (focused on playing along, not guiding)
+# GPT response function (focused on playing along without guidance)
 def generate_gpt_response(user_input, stage):
     try:
         if stage == 1:
-            prompt = f"There has been an explosion, and the player said: '{user_input}'. React based on the situation."
+            prompt = f"There has been an explosion. The player said: '{user_input}'. React based on the situation."
         elif stage == 2:
             prompt = f"The weather is worsening, and patients are at risk of hypothermia. The player said: '{user_input}'. Continue based on the scenario."
         else:
@@ -36,7 +37,7 @@ def generate_gpt_response(user_input, stage):
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are an NPC in a mass casualty simulation. Play along and do not give instructions."},
+                {"role": "system", "content": "You are an NPC in a mass casualty simulation. Play along naturally."},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -45,24 +46,23 @@ def generate_gpt_response(user_input, stage):
         print(f"OpenAI API error: {e}")
         return "There was an error generating a response."
 
-# Highlight important keywords
-def highlight_keywords(text):
-    keywords = {
-        'victims': '**victims**',
-        'explosion': '**explosion**',
-        'patients': '**patients**',
-        'hypothermia': '**hypothermia**',
-        'emergency services': '**emergency services**',
-    }
-    for keyword, highlight in keywords.items():
-        text = text.replace(keyword, highlight)
-    return text
+# Performance evaluation
+def evaluate_performance(user_input, user_id):
+    if user_id not in user_performance:
+        user_performance[user_id] = {"good": 0, "bad": 0}
+
+    # Evaluate based on certain keywords
+    if any(keyword in user_input.lower() for keyword in ["help", "treat", "triage", "assist", "call", "manage"]):
+        user_performance[user_id]["good"] += 1
+    else:
+        user_performance[user_id]["bad"] += 1
 
 # Demo stages function
 async def run_demo_stages(channel, member, stage):
     # Check if game has reached 10 minutes and end it if so
     if game_start_time.get(member.id) and (asyncio.get_event_loop().time() - game_start_time[member.id]) > 600:
         await channel.send("The demo has ended. Thank you for participating!")
+        await end_game(member, channel)
         return
 
     # Stage 1: Welcome and initial prompt
@@ -90,16 +90,28 @@ async def run_demo_stages(channel, member, stage):
         await channel.send(conclusion_message)
         user_stage[member.id] = 4  # End demo
 
-        # Send a PM with a summary and link to GitHub
-        summary_message = (
-            f"Thank you for participating in the demo, {member.mention}. "
-            "You can review the scenario in the `#demo` channel, and check out our GitHub for more details:\n"
-            "https://github.com/Mhalali/Mass_Casualty_Incident_Project"
-        )
+        await end_game(member, channel)  # End the game
+
+# End the game and send performance feedback
+async def end_game(member, channel):
+    if member.id in user_performance:
+        performance = user_performance[member.id]
+        feedback_message = f"Performance Summary for {member.mention}:\n"
+        feedback_message += f"Good decisions: {performance['good']}\n"
+        feedback_message += f"Bad decisions: {performance['bad']}\n"
+
+        # Provide feedback based on performance
+        if performance["good"] > performance["bad"]:
+            feedback_message += "Overall: You made good decisions under pressure!"
+        else:
+            feedback_message += "Overall: There were several critical errors. Keep practicing!"
+
         try:
-            await member.send(summary_message)
+            await member.send(feedback_message)
         except discord.Forbidden:
-            await channel.send(f"Could not send a PM to {member.mention}, but here’s the GitHub link: https://github.com/Mhalali/Mass_Casualty_Incident_Project")
+            await channel.send(f"Could not send a PM to {member.mention}, but here’s your performance summary:\n{feedback_message}")
+    else:
+        await channel.send(f"No performance data available for {member.mention}.")
 
 # Event: User sends a message in the #demo channel
 @bot.event
@@ -118,21 +130,22 @@ async def on_message(message):
 
         current_stage = user_stage[user_id]
 
+        # Evaluate performance based on user input
+        evaluate_performance(message.content, user_id)
+
         # Proceed to the next stage based on the current stage
         if current_stage == 1:
             await run_demo_stages(message.channel, message.author, 1)
         elif current_stage == 2:
-            # Process user input and generate GPT response with NLP and highlighted keywords
+            # Process user input and generate GPT response
             gpt_response = generate_gpt_response(message.content, 2)
-            highlighted_response = highlight_keywords(gpt_response)
-            await message.channel.send(f"**GPT Response**: {highlighted_response}")
+            await message.channel.send(f"**GPT Response**: {gpt_response}")
             await asyncio.sleep(30)  # 30-second delay before moving to next stage
             await run_demo_stages(message.channel, message.author, 2)
         elif current_stage == 3:
             # Process user input and generate GPT response
             gpt_response = generate_gpt_response(message.content, 3)
-            highlighted_response = highlight_keywords(gpt_response)
-            await message.channel.send(f"**GPT Response**: {highlighted_response}")
+            await message.channel.send(f"**GPT Response**: {gpt_response}")
             await asyncio.sleep(30)  # 30-second delay before concluding
             await run_demo_stages(message.channel, message.author, 3)
 
