@@ -1,0 +1,256 @@
+2024-10-01 19:47:04,991 [INFO] logging in using static token
+2024-10-01 19:47:06,764 [INFO] Shard ID None has connected to Gateway (Session ID: 7130d4c7b4e817a270037bdbce0731f8).
+2024-10-01 19:59:37,376 [INFO] logging in using static token
+2024-10-01 19:59:39,198 [INFO] Shard ID None has connected to Gateway (Session ID: f7dca4546edc5fe880f446de718f9760).
+2024-10-01 20:00:06,224 [ERROR] Ignoring exception in on_message
+Traceback (most recent call last):
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\discord\client.py", line 449, in _run_event
+    await coro(*args, **kwargs)
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 101, in on_message
+    gpt_response = generate_openai_response(user_message)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 109, in generate_openai_response
+    response = openai.Completion.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\openai\lib\_old_api.py", line 39, in __call__
+    raise APIRemovedInV1(symbol=self._symbol)
+openai.lib._old_api.APIRemovedInV1: 
+
+You tried to access openai.Completion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-10-01 20:01:43,231 [ERROR] Ignoring exception in on_message
+Traceback (most recent call last):
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\discord\client.py", line 449, in _run_event
+    await coro(*args, **kwargs)
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 101, in on_message
+    gpt_response = generate_openai_response(user_message)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 109, in generate_openai_response
+    response = openai.Completion.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\openai\lib\_old_api.py", line 39, in __call__
+    raise APIRemovedInV1(symbol=self._symbol)
+openai.lib._old_api.APIRemovedInV1: 
+
+You tried to access openai.Completion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-10-01 20:02:36,735 [ERROR] Ignoring exception in on_message
+Traceback (most recent call last):
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\discord\client.py", line 449, in _run_event
+    await coro(*args, **kwargs)
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 101, in on_message
+    gpt_response = generate_openai_response(user_message)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 109, in generate_openai_response
+    response = openai.Completion.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\openai\lib\_old_api.py", line 39, in __call__
+    raise APIRemovedInV1(symbol=self._symbol)
+openai.lib._old_api.APIRemovedInV1: 
+
+You tried to access openai.Completion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-10-01 20:08:00,674 [INFO] logging in using static token
+2024-10-01 20:08:02,360 [INFO] Shard ID None has connected to Gateway (Session ID: fd5dc0119c2aee208e4d72ecf9d3eb3d).
+2024-10-01 20:08:39,883 [ERROR] Ignoring exception in on_message
+Traceback (most recent call last):
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\discord\client.py", line 449, in _run_event
+    await coro(*args, **kwargs)
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 101, in on_message
+    gpt_response = generate_openai_response(user_message)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 109, in generate_openai_response
+    response = openai.ChatCompletion.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\openai\lib\_old_api.py", line 39, in __call__
+    raise APIRemovedInV1(symbol=self._symbol)
+openai.lib._old_api.APIRemovedInV1: 
+
+You tried to access openai.ChatCompletion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-10-01 20:09:09,544 [ERROR] Ignoring exception in on_message
+Traceback (most recent call last):
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\discord\client.py", line 449, in _run_event
+    await coro(*args, **kwargs)
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 101, in on_message
+    gpt_response = generate_openai_response(user_message)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 109, in generate_openai_response
+    response = openai.ChatCompletion.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\openai\lib\_old_api.py", line 39, in __call__
+    raise APIRemovedInV1(symbol=self._symbol)
+openai.lib._old_api.APIRemovedInV1: 
+
+You tried to access openai.ChatCompletion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-10-01 20:09:41,692 [ERROR] Ignoring exception in on_message
+Traceback (most recent call last):
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\discord\client.py", line 449, in _run_event
+    await coro(*args, **kwargs)
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 101, in on_message
+    gpt_response = generate_openai_response(user_message)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 109, in generate_openai_response
+    response = openai.ChatCompletion.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\openai\lib\_old_api.py", line 39, in __call__
+    raise APIRemovedInV1(symbol=self._symbol)
+openai.lib._old_api.APIRemovedInV1: 
+
+You tried to access openai.ChatCompletion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-10-01 20:10:43,162 [INFO] logging in using static token
+2024-10-01 20:10:44,863 [INFO] Shard ID None has connected to Gateway (Session ID: e429e36d3d688ad2991458fb2c29fab4).
+2024-10-01 20:11:03,410 [ERROR] Ignoring exception in on_message
+Traceback (most recent call last):
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\discord\client.py", line 449, in _run_event
+    await coro(*args, **kwargs)
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 106, in on_message
+    gpt_response = generate_openai_response(user_message)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 114, in generate_openai_response
+    response = openai.ChatCompletion.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\openai\lib\_old_api.py", line 39, in __call__
+    raise APIRemovedInV1(symbol=self._symbol)
+openai.lib._old_api.APIRemovedInV1: 
+
+You tried to access openai.ChatCompletion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-10-01 20:11:22,787 [ERROR] Ignoring exception in on_message
+Traceback (most recent call last):
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\discord\client.py", line 449, in _run_event
+    await coro(*args, **kwargs)
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 106, in on_message
+    gpt_response = generate_openai_response(user_message)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 114, in generate_openai_response
+    response = openai.ChatCompletion.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\openai\lib\_old_api.py", line 39, in __call__
+    raise APIRemovedInV1(symbol=self._symbol)
+openai.lib._old_api.APIRemovedInV1: 
+
+You tried to access openai.ChatCompletion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-10-01 20:11:39,445 [ERROR] Ignoring exception in on_message
+Traceback (most recent call last):
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\discord\client.py", line 449, in _run_event
+    await coro(*args, **kwargs)
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 106, in on_message
+    gpt_response = generate_openai_response(user_message)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 114, in generate_openai_response
+    response = openai.ChatCompletion.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\openai\lib\_old_api.py", line 39, in __call__
+    raise APIRemovedInV1(symbol=self._symbol)
+openai.lib._old_api.APIRemovedInV1: 
+
+You tried to access openai.ChatCompletion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-10-01 20:13:21,095 [INFO] logging in using static token
+2024-10-01 20:13:22,868 [INFO] Shard ID None has connected to Gateway (Session ID: ed854bdb034a81ffed797c905b39c1e0).
+2024-10-01 20:13:35,470 [ERROR] Ignoring exception in on_message
+Traceback (most recent call last):
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\discord\client.py", line 449, in _run_event
+    await coro(*args, **kwargs)
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 106, in on_message
+    gpt_response = generate_openai_response(user_message)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 114, in generate_openai_response
+    response = openai.ChatCompletion.create(
+               ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'openai' has no attribute 'ChatCompletion'
+2024-10-01 20:18:07,685 [INFO] logging in using static token
+2024-10-01 20:18:09,698 [INFO] Shard ID None has connected to Gateway (Session ID: 765f55792255a9e95481b2dd8da16269).
+2024-10-01 20:18:20,934 [ERROR] Ignoring exception in on_message
+Traceback (most recent call last):
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\discord\client.py", line 449, in _run_event
+    await coro(*args, **kwargs)
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 106, in on_message
+    gpt_response = generate_openai_response(user_message)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 114, in generate_openai_response
+    response = openai.ChatCompletion.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\openai\lib\_old_api.py", line 39, in __call__
+    raise APIRemovedInV1(symbol=self._symbol)
+openai.lib._old_api.APIRemovedInV1: 
+
+You tried to access openai.ChatCompletion, but this is no longer supported in openai>=1.0.0 - see the README at https://github.com/openai/openai-python for the API.
+
+You can run `openai migrate` to automatically upgrade your codebase to use the 1.0.0 interface. 
+
+Alternatively, you can pin your installation to the old version, e.g. `pip install openai==0.28`
+
+A detailed migration guide is available here: https://github.com/openai/openai-python/discussions/742
+
+2024-10-01 20:19:57,915 [INFO] logging in using static token
+2024-10-01 20:19:59,721 [INFO] Shard ID None has connected to Gateway (Session ID: f23174619d6c2b2419e8ca3c2d462c02).
+2024-10-01 20:20:08,321 [ERROR] Ignoring exception in on_message
+Traceback (most recent call last):
+  File "D:\Users\mohda\AppData\Local\Programs\Python\Python312\Lib\site-packages\discord\client.py", line 449, in _run_event
+    await coro(*args, **kwargs)
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 106, in on_message
+    gpt_response = generate_openai_response(user_message)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mohda\Mass_Casualty_Incident_Project\bot.py", line 113, in generate_openai_response
+    response = openai.chat_completions.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'openai' has no attribute 'chat_completions'. Did you mean: 'ChatCompletion'?
