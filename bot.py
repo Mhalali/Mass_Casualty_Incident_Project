@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 import os
 import openai
 import azure.cognitiveservices.speech as speechsdk
@@ -10,7 +10,8 @@ import asyncio
 load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 SPEECH_KEY = os.getenv('SPEECH_KEY')
-SPEECH_REGION = os.getenv('SPEECH_REGION')
+SPEECH_REGION = "uaenorth"  # Set to your Azure region (uaenorth)
+
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 # Set up OpenAI API key
@@ -35,29 +36,31 @@ def text_to_speech(text):
         cancellation_details = result.cancellation_details
         print(f"Speech synthesis canceled: {cancellation_details.reason}")
 
-# STT (Speech-to-Text) function with optional audio file for testing
-def speech_to_text(use_audio_file=False):
+# Continuous STT (Speech-to-Text) function
+def speech_to_text_continuous():
     speech_config = speechsdk.SpeechConfig(subscription=SPEECH_KEY, region=SPEECH_REGION)
     
-    if use_audio_file:
-        audio_config = speechsdk.AudioConfig(filename="test.wav")  # For testing with audio file
-    else:
-        audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)  # Using microphone
+    # Set up audio configuration (default microphone, ensuring it's in the correct format)
+    audio_format = speechsdk.audio.AudioStreamFormat(samples_per_second=16000, bits_per_sample=16, channels=1)
+    audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True, audio_stream_format=audio_format)
     
+    # Set up the recognizer
     speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
+    
+    # Callback for recognized speech
+    def recognized_cb(evt):
+        print(f"RECOGNIZED: {evt.result.text}")
+        return evt.result.text
+    
+    # Connect to the recognizer event
+    speech_recognizer.recognized.connect(recognized_cb)
 
-    print("Listening for speech...")
-    result = speech_recognizer.recognize_once()
+    print("Starting continuous recognition...")
+    speech_recognizer.start_continuous_recognition()
 
-    if result.reason == speechsdk.ResultReason.RecognizedSpeech:
-        print(f"Recognized: {result.text}")
-        return result.text
-    elif result.reason == speechsdk.ResultReason.NoMatch:
-        print("No speech could be recognized")
-    elif result.reason == speechsdk.ResultReason.Canceled:
-        cancellation_details = result.cancellation_details
-        print(f"Speech recognition canceled: {cancellation_details.reason}")
-    return None
+    # Keep the recognition session active
+    while True:
+        asyncio.sleep(1)
 
 # GPT response function
 def generate_gpt_response(user_input):
@@ -82,31 +85,18 @@ async def on_voice_state_update(member, before, after):
         
         voice_client = discord.utils.get(bot.voice_clients, guild=after.channel.guild)
         if voice_client is None:
-            # Bot joins the voice channel
             voice_client = await after.channel.connect()
 
         # Introduce the game
         text_to_speech("Welcome to the Mass Casualty Incident simulation. Please speak now.")
-        
-        # Start idle timer (10 minutes)
-        idle_timer.start(after.channel.guild)
 
-        # Listen for user speech
-        recognized_text = speech_to_text()
-        if recognized_text:
-            gpt_response = generate_gpt_response(recognized_text)
-            text_to_speech(gpt_response)
-            idle_timer.stop()  # Stop the idle timer when interaction happens
+        # Start listening continuously for speech
+        speech_to_text_continuous()
 
-# Idle timer task to check for inactivity
-@tasks.loop(minutes=10)
-async def idle_timer(guild):
-    # After 10 minutes of no activity, the bot sends a message to the text channel and stops listening
-    text_channel = discord.utils.get(guild.text_channels, name='session-updates')
-    if text_channel:
-        await text_channel.send(f"Bot has been idle in the voice channel for 10 minutes. Feel free to ask questions here.")
-    
-    # The bot stays connected to the voice channel but relocates its interactions to the text channel
+        # Keep the bot connected but stop active speech recognition after a while
+        await asyncio.sleep(600)  # Keeps the bot listening for 10 minutes
+
+        # Bot will remain connected to the voice channel unless disconnected manually
 
 # Error handler
 @bot.event
