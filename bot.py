@@ -21,7 +21,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # GPT response function
 def generate_gpt_response(user_input):
     try:
-        response = openai.chat_completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are assisting with a simulation."},
