@@ -1,3 +1,15 @@
+# Ignore environment variable files
 .env
+
+# Ignore Python cache directories and files
 __pycache__/
 *.pyc
+
+# Ignore virtual environment directory
+venv/
+
+# Ignore other unnecessary binary files
+*.so
+*.dll
+*.exe
+*.bin
