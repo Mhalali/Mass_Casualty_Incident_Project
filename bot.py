@@ -1,10 +1,9 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 import os
 import openai
 import asyncio
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
 
 # Load environment variables
 load_dotenv()
@@ -16,20 +15,17 @@ openai.api_key = OPENAI_API_KEY
 
 # Discord bot setup with intents
 intents = discord.Intents.default()
-intents.messages = True
-intents.message_content = True
-intents.members = True  # Allow tracking members
-
+intents.messages = True  # Enable messages intent
+intents.message_content = True  # Enable reading message content
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# MCI Master ID
-MCI_MASTER_ID = 1283780903629357179
-
-# Dictionary to track users' current game status and last activity time
+# Dictionary to track user's current game stage and start time
 user_game_status = {}
-last_interaction_time = None
+game_active = False  # Tracks whether the game is active
 
-# GPT response function
+MEE6_BOT_ID = 159985870458322944  # Mee6 bot ID to ignore
+
+# GPT response function (focused on playing along naturally)
 def generate_gpt_response(user_input, game_status):
     try:
         prompt = f"The player said: '{user_input}'. React and guide the player in a Mass Casualty Incident simulation. Adjust the scenario based on their actions. Current situation: {game_status}"
@@ -45,18 +41,9 @@ def generate_gpt_response(user_input, game_status):
         print(f"OpenAI API error: {e}")
         return "There was an error generating a response."
 
-# Reset game if no interaction after 10 minutes
-@tasks.loop(minutes=1)
-async def check_idle_time():
-    global last_interaction_time
-    if last_interaction_time and (datetime.now() - last_interaction_time > timedelta(minutes=10)):
-        await reset_game(None)  # Reset the game for all players if no activity
-
 # Organic game flow without predefined stages
 async def run_game_flow(channel, member, user_input):
-    global last_interaction_time
-    last_interaction_time = datetime.now()  # Update the last interaction time
-
+    global game_active
     user_id = member.id
     game_status = user_game_status.get(user_id, "explosion has occurred, and you're the only medical professional available.")
     
@@ -70,19 +57,15 @@ async def run_game_flow(channel, member, user_input):
 # Event: User sends a message in the #demo channel
 @bot.event
 async def on_message(message):
-    if message.author == bot.user:
+    global game_active
+    if message.author == bot.user or message.author.id == MEE6_BOT_ID:
         return
 
-    # Ignore the MCI master account for gameplay but listen to commands
-    if message.author.id == MCI_MASTER_ID:
-        await bot.process_commands(message)
-        return
-
-    # Handle messages in the #demo channel
-    if message.channel.name == 'demo':
+    # If a user sends a message in the #demo channel
+    if message.channel.name == 'demo' and game_active:
         user_id = message.author.id
         
-        # Assign role if a new player joins
+        # Check if user is starting a new game or continuing
         if user_id not in user_game_status:
             user_game_status[user_id] = "explosion has occurred, and you're the only medical professional available."
             await message.channel.send(f"Welcome, {message.author.mention}, to the Mass Casualty Incident Simulation Demo!")
@@ -92,21 +75,41 @@ async def on_message(message):
             # Continue the game flow based on user input
             await run_game_flow(message.channel, message.author, message.content)
 
-# Command to restart the game for all players
-@bot.command(name='reset')
-@commands.has_permissions(administrator=True)
-async def reset_game(ctx):
-    global user_game_status
-    user_game_status.clear()
-    await ctx.send("The game has been reset for all players. Type anything to start again.")
+    # Process other commands or responses normally
+    await bot.process_commands(message)
 
-# Command to change the scene
-@bot.command(name='change_scene')
-@commands.has_permissions(administrator=True)
-async def change_scene(ctx, *, scene_description):
-    for user_id in user_game_status:
-        user_game_status[user_id] = scene_description
-    await ctx.send(f"The scene has been changed to: {scene_description}")
+# Command to reset the game and stop it
+@bot.command(name='reset')
+async def reset_game(ctx):
+    global game_active
+    game_active = False  # Set game to inactive
+    user_game_status.clear()  # Clear the game state for all users
+    await ctx.send(f"{ctx.author.mention}, the simulation has been reset and stopped. The game is now inactive. Type anything to begin a new session.")
+
+# Command to start the game manually
+@bot.command(name='start')
+async def start_game(ctx):
+    global game_active
+    if not game_active:
+        game_active = True
+        await ctx.send(f"{ctx.author.mention}, the simulation has been started. Players can now join and interact.")
+    else:
+        await ctx.send(f"{ctx.author.mention}, the simulation is already active!")
+
+# Command to clear messages from the #demo channel
+@bot.command(name='clear')
+@commands.has_permissions(manage_messages=True)  # Only allow those with permissions
+async def clear_messages(ctx, limit: int = 100):
+    await ctx.channel.purge(limit=limit)
+    await ctx.send(f"Cleared {limit} messages from the channel.", delete_after=5)
+
+# Command to set a 10-minute inactivity timer to reset the game
+async def inactivity_timer():
+    global game_active
+    await asyncio.sleep(600)  # 10 minutes
+    if game_active:
+        game_active = False
+        print("Game reset due to inactivity.")
 
 # Error handler
 @bot.event
@@ -117,12 +120,6 @@ async def on_command_error(ctx, error):
         await ctx.send("You do not have the necessary permissions to run this command.")
     else:
         await ctx.send(f"An error occurred: {str(error)}")
-
-# Start the idle check loop
-@bot.event
-async def on_ready():
-    check_idle_time.start()
-    print(f'{bot.user.name} is connected to Discord!')
 
 # Start the bot
 bot.run(DISCORD_TOKEN)
