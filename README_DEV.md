@@ -1,14 +1,15 @@
 # MCI Bot (Mass Casualty Incident Bot) - Developer Documentation
 
-This document contains all the technical details needed for setting up, running, and maintaining the MCI Bot. It is intended for developers who need to manage the bot, including setting up Speech-to-Text (STT), Text-to-Speech (TTS), and deploying it to a server.
+This document contains all the technical details needed for setting up, running, and maintaining the MCI Bot. It is intended for developers who need to manage the bot, focusing on its current text-based implementation, bot commands, and setup for running locally or on a Raspberry Pi.
 
 ## Setup Instructions
 
 ### Prerequisites
 
-- **Microsoft Azure Account**: Sign up for a free Azure account if you don't already have one. Enable Speech Services for STT and TTS.
-- **Python 3.x**: Ensure Python 3.x is installed on your machine.
+- **Python 3.x**: Ensure Python 3.x is installed on your machine or Raspberry Pi.
 - **Git**: Ensure Git is installed for version control.
+- **OpenAI API Key**: Obtain an OpenAI API key for the bot’s GPT integration.
+- **Discord Developer Account**: Set up a Discord bot and obtain the token for authentication.
 
 ### Installation Steps
 
@@ -22,11 +23,10 @@ This document contains all the technical details needed for setting up, running,
     Create a `.env` file in the root directory of the project with the following contents:
     ```bash
     DISCORD_TOKEN=your-discord-bot-token
-    AZURE_SPEECH_KEY=your-azure-speech-key
-    AZURE_REGION=your-azure-region
+    OPENAI_API_KEY=your-openai-api-key
     ```
 
-    These environment variables are required to authenticate with Discord and Azure.
+    These environment variables are required to authenticate with Discord and OpenAI.
 
 3. **Install Required Packages:**
     Install the required Python packages by running:
@@ -34,7 +34,7 @@ This document contains all the technical details needed for setting up, running,
     pip install -r requirements.txt
     ```
 
-### Running the Bot Locally
+### Running the Bot Locally or on Raspberry Pi
 
 1. **Start the Bot:**
     Once you've set up the environment variables and installed the dependencies, you can start the bot by running:
@@ -44,28 +44,34 @@ This document contains all the technical details needed for setting up, running,
 
 2. **Admin Setup Command:**
     - Run `!setupadmin` in Discord to create all the necessary roles and channels for the bot.
+  
+3. **Bot Commands:**
+    - `!reset`: Resets the game and stops the simulation, waiting for players to start again.
+    - More control commands are planned for future updates.
 
 ### Hosting the Bot
 
-The bot can be hosted on various platforms to ensure it runs continuously. Below are some recommended hosting solutions:
+The bot can be hosted on various platforms to ensure it runs continuously. Below are the current hosting preferences:
 
-#### **Option 1: Heroku (Free Tier)**
-1. Push your code to a Heroku app.
-2. Set environment variables (`DISCORD_TOKEN`, `AZURE_SPEECH_KEY`, etc.) through the Heroku dashboard.
-3. Set up **GitHub integration** for automatic deployments when the repository is updated.
+#### **Option 1: Raspberry Pi (Preferred Solution)**
+1. **Setup on Raspberry Pi**: Raspberry Pi 5 or similar hardware can be used to run the bot 24/7.
+2. **Process Manager**: Use `pm2` or `systemd` to manage the bot process and ensure it remains running after reboots or failures.
+3. **Port Forwarding**: Set up port forwarding if remote access is required, and use a dynamic DNS service for access via a public URL if needed.
 
 #### **Option 2: Microsoft Azure App Service**
-1. Use Azure App Service for hosting. This offers tight integration with other Azure services (like STT and TTS).
-2. Deploy the bot code to Azure using **GitHub Actions** or **Azure CLI**.
-3. Set environment variables through Azure’s configuration options.
-
-#### **Option 3: DigitalOcean (Paid Hosting)**
-1. Set up a **Virtual Private Server (VPS)** on DigitalOcean for more control.
-2. Use SSH to connect to the server, and run the bot using a process manager like **pm2** to keep it online 24/7.
+1. **Azure Hosting**: You can still host the bot on Azure using Azure App Service.
+2. **GitHub Integration**: Set up GitHub Actions for CI/CD, allowing automatic deployments on push.
+3. **Environment Variables**: Configure environment variables through Azure’s configuration settings for seamless bot operation.
 
 ### Deployment Integration (Optional)
 
-You can set up **automatic deployment** from GitHub using platforms like **Heroku** or **Azure App Service**. When you push changes to your GitHub repository, the hosting service will automatically update the live version of the bot.
+You can set up **automatic deployment** from GitHub using **GitHub Actions** or **Azure App Service**. This will automatically update the live version of the bot whenever changes are pushed to the GitHub repository.
+
+### Future Enhancements
+
+- **Voice Re-Integration**: Although voice functionality has been removed for now, future versions may reintroduce Speech-to-Text (STT) and Text-to-Speech (TTS) using Azure's Speech Services.
+- **Biometric Integration**: Exploring integration with health apps or sensors (e.g., heart rate monitors) to enhance the realism of the MCI scenarios.
+- **Expanded Game Features**: Additional commands and control mechanisms for the bot to allow more flexibility and customization during simulations.
 
 ## License
 
