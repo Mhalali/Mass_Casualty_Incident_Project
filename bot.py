@@ -22,9 +22,14 @@ intents.guilds = True
 intents.members = True  # Required for assigning roles
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Dictionary to track user's current game stage and start time
+# Dictionary to track user's current game stage, start time, and strikes
 user_game_status = {}
 inactive_timeouts = {}  # To track last active time for each user
+user_timers = {}  # Track timers for warnings and resets
+user_strikes = {}  # Track user strikes for inappropriate behavior
+
+# Inappropriate triggers that will count towards strikes
+trigger_phrases = ["nap", "ignore", "kill all", "quit"]
 
 # Hospital setup
 hospitals = {
@@ -73,15 +78,77 @@ async def run_game_flow(channel, member, user_input):
     user_game_status[user_id] = gpt_response
     await channel.send(f"**GPT Response**: {gpt_response}")
 
+# Warning and inactivity handling
+async def start_inactivity_timer(channel, user_id):
+    user_timers[user_id] = 180  # Timer set to 3 minutes (180 seconds)
+    while user_timers[user_id] > 0:
+        await asyncio.sleep(1)
+        user_timers[user_id] -= 1
+        
+        if user_timers[user_id] == 90:
+            await channel.send(f"<@{user_id}> Warning: You have 90 seconds left to respond.")
+        elif user_timers[user_id] == 30:
+            await channel.send(f"<@{user_id}> Warning: You have 30 seconds left to respond.")
+        elif user_timers[user_id] == 10:
+            await channel.send(f"<@{user_id}> Warning: You have 10 seconds left to respond.")
+    
+    # End game if timer reaches 0
+    if user_timers[user_id] == 0:
+        await channel.send(f"<@{user_id}> Your time is up. The game will reset.")
+        # Send logs to `session-logs` and `report-logs`
+        session_logs_channel = discord.utils.get(channel.guild.channels, name="session-logs")
+        report_logs_channel = discord.utils.get(channel.guild.channels, name="report-logs")
+        if session_logs_channel:
+            await session_logs_channel.send(f"Session for <@{user_id}> ended due to inactivity. Summary: (transcript)")
+        if report_logs_channel:
+            await report_logs_channel.send(f"Performance analysis for <@{user_id}>: Could improve responsiveness and task handling.")
+        
+        # Send DM to user
+        user = bot.get_user(user_id)
+        if user:
+            await user.send(f"Your session has ended due to inactivity. Check the logs for details. For more information, visit: [GitHub link]")
+
+        # Reset the game status
+        user_game_status.pop(user_id, None)
+        inactive_timeouts.pop(user_id, None)
+        user_timers.pop(user_id, None)
+
+# Strike-based inappropriate behavior system
+async def handle_inappropriate_behavior(message, user_id):
+    content = message.content.lower()
+    for trigger in trigger_phrases:
+        if trigger in content:
+            # Increment the strike count
+            user_strikes[user_id] = user_strikes.get(user_id, 0) + 1
+            await message.channel.send(f"<@{user_id}> Warning: Inappropriate behavior detected. Strike {user_strikes[user_id]}/3.")
+            
+            # If the user reaches 3 strikes, reset the game
+            if user_strikes[user_id] >= 3:
+                await message.channel.send(f"<@{user_id}> You have reached 3 strikes. The game will reset.")
+                # Reset strikes and game
+                user_strikes[user_id] = 0
+                user_game_status.pop(user_id, None)
+                user_timers.pop(user_id, None)
+                return True  # Triggered reset
+    return False  # No reset
+
 # Event: User sends a message in the #demo channel
 @bot.event
 async def on_message(message):
     if message.author == bot.user or message.author.id == 159985870458322944:  # Ignore bot and MEE6
         return
+    
+    # Check if the message starts with "!ign" (ignoring case)
+    if message.content.startswith("!ign"):
+        return  # Ignore the message without triggering any bot response
 
     # If a user sends a message in the #demo channel
     if message.channel.name == 'demo':
         user_id = message.author.id
+        
+        # Handle inappropriate behavior with trigger system
+        if await handle_inappropriate_behavior(message, user_id):
+            return  # Game reset due to behavior
         
         # Check if user is starting a new game or continuing
         if user_id not in user_game_status:
@@ -90,9 +157,13 @@ async def on_message(message):
             await message.channel.send(f"Welcome, {message.author.mention}, to the Mass Casualty Incident Simulation Demo! You have been assigned the role: **{role_assigned}**.")
             await asyncio.sleep(5)
             await message.channel.send("You receive a debrief: You're heading to the site of a severe accident. There's chaos, and victims require immediate attention. What will you do first?")
+            await start_inactivity_timer(message.channel, user_id)  # Start the inactivity timer
         else:
             # Continue the game flow based on user input
             await run_game_flow(message.channel, message.author, message.content)
+            # Reset timer
+            if user_id in user_timers:
+                user_timers[user_id] = 180  # Reset to 3 minutes
         
         # Update last active time
         inactive_timeouts[user_id] = asyncio.get_event_loop().time()
@@ -113,18 +184,6 @@ async def clear_messages(ctx, amount: int = 10):
     await ctx.channel.purge(limit=amount)
     await ctx.send(f"Cleared {amount} messages.")
 
-# Random dispatch calls or victim announcements
-async def random_announcement():
-    demo_channel = discord.utils.get(bot.get_all_channels(), name="demo")
-    if demo_channel:
-        announcements = [
-            "Dispatch: **Incoming injured child from car accident**. Prepare ER.",
-            "**Victim**: I'm bleeding badly, someone help!",
-            "Dispatch: Severe weather is incoming, adjust accordingly.",
-            "**Victim**: I can't feel my leg, it hurts!"
-        ]
-        await demo_channel.send(random.choice(announcements))
-
 # Task to check inactivity and reset the game if no activity for 10 minutes
 @tasks.loop(minutes=1)
 async def inactivity_check():
@@ -142,36 +201,6 @@ async def inactivity_check():
 async def on_ready():
     print(f"{bot.user.name} has connected to Discord!")
     inactivity_check.start()  # Start the inactivity checker task
-    bot.loop.create_task(random_announcement())  # Start random announcements
-
-# Confirm quitting the game
-@bot.command(name='quit')
-async def quit_game(ctx):
-    def check(m):
-        return m.author == ctx.author and m.content.lower() in ['yes', 'no']
-
-    await ctx.send(f"{ctx.author.mention}, are you sure you want to quit the simulation? Type 'yes' or 'no'.")
-
-    try:
-        msg = await bot.wait_for('message', check=check, timeout=30)
-        if msg.content.lower() == 'yes':
-            user_id = ctx.author.id
-            user_game_status.pop(user_id, None)
-            await ctx.send(f"{ctx.author.mention}, you have quit the simulation. Type anything to restart.")
-        else:
-            await ctx.send(f"{ctx.author.mention}, you have decided to continue the simulation.")
-    except asyncio.TimeoutError:
-        await ctx.send("You took too long to respond. Simulation will continue.")
-
-# Error handler
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandNotFound):
-        await ctx.send("Command not found.")
-    elif isinstance(error, commands.MissingPermissions):
-        await ctx.send("You do not have the necessary permissions to run this command.")
-    else:
-        await ctx.send(f"An error occurred: {str(error)}")
 
 # Run the bot
 bot.run(DISCORD_TOKEN)
