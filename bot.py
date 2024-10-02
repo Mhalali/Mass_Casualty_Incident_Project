@@ -4,6 +4,7 @@ import os
 import openai
 import asyncio
 from dotenv import load_dotenv
+import random
 
 # Load environment variables
 load_dotenv()
@@ -17,16 +18,26 @@ openai.api_key = OPENAI_API_KEY
 intents = discord.Intents.default()
 intents.messages = True
 intents.message_content = True
+intents.guilds = True
+intents.members = True  # Required for assigning roles
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Dictionary to track user's current game stage and start time
 user_game_status = {}
 inactive_timeouts = {}  # To track last active time for each user
 
+# Hospital setup
+hospitals = {
+    "Rashid Hospital Trauma Center": "Helicopter pad available, full ER capabilities.",
+    "Latifa Hospital": "No helipad, limited ER.",
+    "Dubai Hospital": "Helipad available, limited ER.",
+    "Al Jalila Children’s Hospital": "No helipad, ER only for children."
+}
+
 # GPT response function (focused on playing along naturally)
 def generate_gpt_response(user_input, game_status):
     try:
-        prompt = f"The player said: '{user_input}'. React and guide the player in a Mass Casualty Incident simulation. Adjust the scenario based on their actions. Current situation: {game_status}"
+        prompt = f"The player said: '{user_input}'. React and guide the player in a Mass Casualty Incident simulation. Current situation: {game_status}"
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -39,10 +50,21 @@ def generate_gpt_response(user_input, game_status):
         print(f"OpenAI API error: {e}")
         return "There was an error generating a response."
 
+# Assign roles to new players
+async def assign_role(member):
+    available_roles = ["Commander", "Triage Leader", "Transport Leader", "Safety Officer", "Treatment Leader"]
+    assigned_role = random.choice(available_roles)
+    
+    role = discord.utils.get(member.guild.roles, name=assigned_role)
+    if role:
+        await member.add_roles(role)
+        return assigned_role
+    return None
+
 # Organic game flow without predefined stages
 async def run_game_flow(channel, member, user_input):
     user_id = member.id
-    game_status = user_game_status.get(user_id, "explosion has occurred, and you're the only medical professional available.")
+    game_status = user_game_status.get(user_id, "A car accident has occurred, and you're part of the medical team arriving on the scene.")
     
     # Generate dynamic GPT response
     gpt_response = generate_gpt_response(user_input, game_status)
@@ -63,10 +85,11 @@ async def on_message(message):
         
         # Check if user is starting a new game or continuing
         if user_id not in user_game_status:
-            user_game_status[user_id] = "explosion has occurred, and you're the only medical professional available."
-            await message.channel.send(f"Welcome, {message.author.mention}, to the Mass Casualty Incident Simulation Demo!")
+            role_assigned = await assign_role(message.author)
+            user_game_status[user_id] = "You are part of the medical team responding to a car accident."
+            await message.channel.send(f"Welcome, {message.author.mention}, to the Mass Casualty Incident Simulation Demo! You have been assigned the role: **{role_assigned}**.")
             await asyncio.sleep(5)
-            await message.channel.send("You hear the sound of an **explosion**. The scene is chaotic, and people are injured all around. What will you do first?")
+            await message.channel.send("You receive a debrief: You're heading to the site of a severe accident. There's chaos, and victims require immediate attention. What will you do first?")
         else:
             # Continue the game flow based on user input
             await run_game_flow(message.channel, message.author, message.content)
@@ -90,12 +113,24 @@ async def clear_messages(ctx, amount: int = 10):
     await ctx.channel.purge(limit=amount)
     await ctx.send(f"Cleared {amount} messages.")
 
+# Random dispatch calls or victim announcements
+async def random_announcement():
+    demo_channel = discord.utils.get(bot.get_all_channels(), name="demo")
+    if demo_channel:
+        announcements = [
+            "Dispatch: **Incoming injured child from car accident**. Prepare ER.",
+            "**Victim**: I'm bleeding badly, someone help!",
+            "Dispatch: Severe weather is incoming, adjust accordingly.",
+            "**Victim**: I can't feel my leg, it hurts!"
+        ]
+        await demo_channel.send(random.choice(announcements))
+
 # Task to check inactivity and reset the game if no activity for 10 minutes
 @tasks.loop(minutes=1)
 async def inactivity_check():
     current_time = asyncio.get_event_loop().time()
     for user_id, last_active_time in list(inactive_timeouts.items()):
-        if current_time - last_active_time > 600:  # 10 minutes
+        if current_time - last_active_time > 300:  # 5 minutes
             user_game_status.pop(user_id, None)
             inactive_timeouts.pop(user_id, None)
             channel = discord.utils.get(bot.get_all_channels(), name="demo")
@@ -107,6 +142,7 @@ async def inactivity_check():
 async def on_ready():
     print(f"{bot.user.name} has connected to Discord!")
     inactivity_check.start()  # Start the inactivity checker task
+    bot.loop.create_task(random_announcement())  # Start random announcements
 
 # Confirm quitting the game
 @bot.command(name='quit')
