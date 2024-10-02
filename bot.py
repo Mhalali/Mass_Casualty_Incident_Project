@@ -13,16 +13,15 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 # Set up OpenAI API key
 openai.api_key = OPENAI_API_KEY
 
-# Discord bot setup with intents
+# Set up Discord bot with intents
 intents = discord.Intents.default()
-intents.messages = True  # Enable messages intent
-intents.message_content = True  # Enable reading message content
+intents.messages = True
+intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Dictionary to track user's current game stage and start time
 user_game_status = {}
-ignore_user_ids = ["159985870458322944"]  # MEE6 Bot ID
-inactive_timer = {}  # To track inactivity
+inactive_timeouts = {}  # To track last active time for each user
 
 # GPT response function (focused on playing along naturally)
 def generate_gpt_response(user_input, game_status):
@@ -55,31 +54,13 @@ async def run_game_flow(channel, member, user_input):
 # Event: User sends a message in the #demo channel
 @bot.event
 async def on_message(message):
-    if message.author == bot.user or str(message.author.id) in ignore_user_ids:
+    if message.author == bot.user or message.author.id == 159985870458322944:  # Ignore bot and MEE6
         return
-
-    # Reset inactivity timer
-    inactive_timer[message.author.id] = asyncio.get_event_loop().time()
 
     # If a user sends a message in the #demo channel
     if message.channel.name == 'demo':
         user_id = message.author.id
         
-        # Handle quit command
-        if message.content.lower() == "quit":
-            await message.channel.send(f"{message.author.mention}, are you sure you want to quit? Type 'yes' to confirm or 'no' to continue.")
-            return
-
-        # Confirm quit
-        if message.content.lower() == "yes" and user_id in user_game_status:
-            del user_game_status[user_id]
-            await message.channel.send(f"{message.author.mention}, you have successfully quit the simulation.")
-            return
-        
-        if message.content.lower() == "no":
-            await message.channel.send(f"Continuing the simulation, {message.author.mention}.")
-            return
-
         # Check if user is starting a new game or continuing
         if user_id not in user_game_status:
             user_game_status[user_id] = "explosion has occurred, and you're the only medical professional available."
@@ -89,6 +70,9 @@ async def on_message(message):
         else:
             # Continue the game flow based on user input
             await run_game_flow(message.channel, message.author, message.content)
+        
+        # Update last active time
+        inactive_timeouts[user_id] = asyncio.get_event_loop().time()
 
     # Process other commands or responses normally
     await bot.process_commands(message)
@@ -98,25 +82,50 @@ async def on_message(message):
 async def restart_game(ctx):
     user_id = ctx.author.id
     user_game_status.pop(user_id, None)  # Remove previous game status
-    await ctx.send(f"{ctx.author.mention}, the simulation has been restarted and stopped. Type anything to begin a new session.")
+    await ctx.send(f"{ctx.author.mention}, the simulation has been restarted. Type anything to begin.")
 
 # Command to clear messages
-@bot.command(name='clear_messages')
-@commands.has_permissions(manage_messages=True)
+@bot.command(name='clear')
 async def clear_messages(ctx, amount: int = 10):
     await ctx.channel.purge(limit=amount)
     await ctx.send(f"Cleared {amount} messages.")
 
-# Automatic inactivity check
+# Task to check inactivity and reset the game if no activity for 10 minutes
 @tasks.loop(minutes=1)
 async def inactivity_check():
     current_time = asyncio.get_event_loop().time()
-    for user_id, last_active in list(inactive_timer.items()):
-        if current_time - last_active > 600:  # 10 minutes
-            del user_game_status[user_id]
-            del inactive_timer[user_id]
-            user = await bot.fetch_user(user_id)
-            await user.send("Your session has been reset due to inactivity.")
+    for user_id, last_active_time in list(inactive_timeouts.items()):
+        if current_time - last_active_time > 600:  # 10 minutes
+            user_game_status.pop(user_id, None)
+            inactive_timeouts.pop(user_id, None)
+            channel = discord.utils.get(bot.get_all_channels(), name="demo")
+            if channel:
+                await channel.send(f"User {user_id}'s session has been reset due to inactivity.")
+
+# Event when the bot is ready
+@bot.event
+async def on_ready():
+    print(f"{bot.user.name} has connected to Discord!")
+    inactivity_check.start()  # Start the inactivity checker task
+
+# Confirm quitting the game
+@bot.command(name='quit')
+async def quit_game(ctx):
+    def check(m):
+        return m.author == ctx.author and m.content.lower() in ['yes', 'no']
+
+    await ctx.send(f"{ctx.author.mention}, are you sure you want to quit the simulation? Type 'yes' or 'no'.")
+
+    try:
+        msg = await bot.wait_for('message', check=check, timeout=30)
+        if msg.content.lower() == 'yes':
+            user_id = ctx.author.id
+            user_game_status.pop(user_id, None)
+            await ctx.send(f"{ctx.author.mention}, you have quit the simulation. Type anything to restart.")
+        else:
+            await ctx.send(f"{ctx.author.mention}, you have decided to continue the simulation.")
+    except asyncio.TimeoutError:
+        await ctx.send("You took too long to respond. Simulation will continue.")
 
 # Error handler
 @bot.event
@@ -128,6 +137,5 @@ async def on_command_error(ctx, error):
     else:
         await ctx.send(f"An error occurred: {str(error)}")
 
-# Start the bot
-inactivity_check.start()  # Start the inactivity checker
+# Run the bot
 bot.run(DISCORD_TOKEN)
