@@ -50,15 +50,15 @@ The MCI Bot is designed to assist in training healthcare professionals for Mass 
 ### Release v0.2-alpha:
 
 - Dynamic Role Play: The bot now plays the roles of various leaders (Triage Leader, Transport Leader, etc.), providing specific responses based on each role’s responsibilities.
-- 
+  
 - Patient Sounds: Introduced patient voices and background sounds to add realism to the scenario.
-- 
+  
 - Scene Descriptions: Players can request descriptions of the environment and scene, which the bot dynamically generates.
-- 
+  
 - Improved Response Flow: Updated response handling to remove generic phrases and focus on next steps or consequences of user decisions.
-- 
+  
 - Enhanced Reporting and Logs: Post-session logs now include detailed performance summaries, tracking responsiveness and decision-making.
-- 
+  
 - Inactivity and Strike System: If players are inactive, the bot issues warnings and logs the session’s summary if the timer expires.
 
 ### Release v0.1-alpha:
