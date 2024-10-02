@@ -63,8 +63,7 @@ The MCI Bot is powered by:
 
 - **Expanded Scenarios**: Additional scenarios focusing on different types of emergencies and more roles for users to take on during training.
 
-## License
-[![License](https://img.shields.io/badge/license-Proprietary-red)](./LICENSE)
+## License [![License](https://img.shields.io/badge/license-Proprietary-red)](./LICENSE)
 This project is proprietary. You may not use, distribute, or modify this project without explicit permission from the owner.
 
 For more details or collaboration inquiries, please contact:
