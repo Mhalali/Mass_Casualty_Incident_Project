@@ -12,6 +12,10 @@ The MCI Bot is designed to assist in training healthcare professionals for Mass 
 - [Future Goals](#future-goals)
 - [License](#license)
 
+
+[![Watch the video](<img width="327" alt="thmb" src="https://github.com/user-attachments/assets/13840a5e-3192-4238-a4ee-0c6462eae095">)](https://github.com/user-attachments/assets/5af25100-be60-4a7d-8475-c4c05d45711b/video.mp4)
+
+
 ## Key Features
 
 - **Interactive Scenarios**: The bot presents various triage, treatment, and transport situations that challenge users to think critically and respond effectively.
@@ -25,6 +29,7 @@ The MCI Bot is designed to assist in training healthcare professionals for Mass 
 - **Post-Scenario Debriefing**: After each scenario, the bot sends an analysis of the player’s performance, highlighting strengths and areas for improvement. This feedback is sent via PM and saved in a log channel for review.
 
 ## Latest Changes
+<img width="327" alt="thmb" src="https://github.com/user-attachments/assets/13bf5f1d-5116-4a3c-84f0-d7a47ecbd844">
 
 - **Removed Time Restrictions**: Players now have more freedom to explore the simulation, ask questions, and make decisions at their own pace without a rigid time limit.
   
@@ -70,3 +75,7 @@ For more details or collaboration inquiries, please contact:
 
 **Mohamed Alali**  
 mhalali@dubaihealth.ae
+
+
+
+
