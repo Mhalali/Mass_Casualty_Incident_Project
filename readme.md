@@ -94,7 +94,7 @@ For more details or collaboration inquiries, please contact:
 mhalali@dubaihealth.ae
 
 ### Suggested Links:
-- **[Wiki Page](./wiki/)**
+- **[Wiki Page](./wiki)**
 - **[Projects Plan](https://github.com/users/Mhalali/projects/1)**
 
 
