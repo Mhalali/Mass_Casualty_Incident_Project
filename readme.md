@@ -1,36 +1,73 @@
-# MCI Bot (Mass Casualty Incident Bot)
+MCI Bot (Mass Casualty Incident Bot)
 
-This bot is designed to assist in training healthcare professionals for **Mass Casualty Incidents (MCI)** through realistic, voice-activated scenarios. The bot runs on **Discord** and helps simulate real-time triage, treatment, and transport situations using voice commands.
+The MCI Bot is designed to assist in training healthcare professionals for Mass Casualty Incidents (MCI) through immersive, text-based simulations. It simulates real-time triage, treatment, and transport scenarios, helping users make critical decisions under stress. The bot operates within a Discord environment and aims to create an engaging and realistic training tool for professionals in emergency healthcare.
 
-## Key Features
+Key Features
 
-- **Voice-activated** scenarios for triage, treatment, and transport decisions.
-- **Demo Mode**: A short 3-minute interactive demo allows users to experience the simulation.
-- **Real-time Feedback**: Players can receive real-time guidance and updates based on their actions.
-- Integrated with **Microsoft Azure Speech Services** for **Speech-to-Text (STT)** and **Text-to-Speech (TTS)**.
+Interactive Scenarios: The bot presents various triage, treatment, and transport situations that challenge users to think critically and respond effectively.
 
-## How It Works
+Demo Mode: An interactive 5-minute demo allows users to experience a condensed version of the full simulation. The player must navigate decisions and communicate effectively during a high-stress scenario.
 
-1. **Joining the Demo**:
-   - Players can join the **Demo Channel** on Discord.
-   - The bot will walk you through a simple triage and treatment scenario, guiding your decisions with voice commands.
-   - You have **3 minutes** to complete the demo, after which the bot will automatically end the session.
+Real-time Analysis: The bot evaluates user performance and provides feedback on key decisions, analyzing the user’s ability to manage time, resources, and communication during the simulation.
 
-2. **Game Master Setup**:
-   - The GameMaster can set up roles and channels for full simulations using simple bot commands.
-   - Full scenarios can be tailored based on specific training needs, providing healthcare professionals with immersive practice.
+Natural Language Processing: Enhanced NLP provides a more immersive, game-like experience as the bot responds organically to user inputs without guiding them step-by-step.
 
-## Repository
+Post-Scenario Debriefing: After each scenario, the bot sends an analysis of the player’s performance, highlighting strengths and areas for improvement. This feedback is sent via PM and saved in a log channel for review.
 
-This project is hosted privately at the following link:
 
-[GitHub Repository - MCI Bot](https://github.com/MightyP00/MCI-Bot)
+Latest Changes
 
-Access is restricted and requires permission to collaborate or view.
+Removed Time Restrictions: Players now have more freedom to explore the simulation, ask questions, and make decisions at their own pace without a rigid time limit.
 
-## License
+Scenario Flexibility: Players are no longer rushed through stages. The bot will provide adequate time for responses and will only advance when the player is ready, allowing for a more organic experience.
 
-**Proprietary License**
+Highlight Key Words: The bot highlights key words (e.g., "victims," "accident type") to make the scenarios more engaging and to help players focus on critical information.
+
+Enhanced Commands: The bot includes additional commands like !reset to give facilitators more control over the game flow, allowing them to restart or pause the simulation when needed.
+
+
+How It Works
+
+Joining the Demo
+
+1. Players can join the #demo channel on Discord.
+
+
+2. The bot will introduce a scenario and provide instructions to simulate a real-world MCI.
+
+
+3. Players make decisions, and the bot adjusts the scenario dynamically based on their responses.
+
+
+4. The demo ends with a post-scenario debrief, including a performance review.
+
+
+
+Game Master Setup
+
+The Game Master can set up full training sessions using custom commands to control the simulation. Channels and roles for different parts of the simulation (triage, transport, treatment, etc.) can be configured, allowing for realistic, full-scale MCI training exercises.
+
+Powering the MCI Bot
+
+The MCI Bot is powered by:
+
+Microsoft Azure: For infrastructure management and potential future integration of Speech-to-Text (STT) and Text-to-Speech (TTS) capabilities.
+
+OpenAI GPT API: Provides advanced NLP to create dynamic and realistic conversational experiences during the simulation.
+
+Raspberry Pi: The bot runs on a Raspberry Pi for low-cost, continuous operation with minimal resource consumption.
+
+
+Future Goals
+
+Voice Integration: While the current version is text-based, we plan to reintroduce voice functionality using Azure’s Speech Services for a fully voice-activated experience.
+
+Biometric Sensor Integration: Exploring the possibility of integrating biometric data (e.g., heart rate) into the game using health applications or sensors.
+
+Expanded Scenarios: Additional scenarios focusing on different types of emergencies and more roles for users to take on during training.
+
+
+License
 
 This project is proprietary. You may not use, distribute, or modify this project without explicit permission from the owner.
 
