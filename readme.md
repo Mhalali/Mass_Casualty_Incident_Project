@@ -3,6 +3,8 @@
 The MCI Bot is designed to assist in training healthcare professionals for Mass Casualty Incidents (MCI) through immersive, text-based simulations. It simulates real-time triage, treatment, and transport scenarios, helping users make critical decisions under stress. The bot operates within a Discord environment and aims to create an engaging and realistic training tool for professionals in emergency healthcare.
 
 ## Table of Contents
+- [Branching Strategy](#Branching-Strategy)
+- [Workflow](#Workflow)
 - [Key Features](#key-features)
 - [Latest Changes](#latest-changes)
 - [How It Works](#how-it-works)
@@ -12,12 +14,24 @@ The MCI Bot is designed to assist in training healthcare professionals for Mass 
 - [Future Goals](#future-goals)
 - [License](#license)
 
-
 <img width="327" alt="thmb" src="https://github.com/user-attachments/assets/13840a5e-3192-4238-a4ee-0c6462eae095">
 
 
 ![Watch the video](https://github.com/user-attachments/assets/ab489e57-ffcb-4d15-9d6d-5815fdaa5652)
 
+## Branching Strategy
+
+- **Main Branch**: The stable version of the project. All releases and production-ready features are merged here.
+- **Development Branch**: The active development branch where features and fixes are merged before moving to the main branch.
+- **Feature Branches**: Create a branch for each new feature using the naming convention `feature/feature-name`.
+- **Bugfix Branches**: Create a branch for each bugfix using the naming convention `bugfix/bug-name`.
+
+### Workflow
+1. Create a feature or bugfix branch.
+2. Make the necessary changes.
+3. Create a pull request to merge into the development branch.
+4. Once reviewed and approved, the feature branch will be merged into development.
+5. The development branch will be periodically merged into main for release.
 
 ## Key Features
 
