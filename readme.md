@@ -2,6 +2,16 @@
 
 The MCI Bot is designed to assist in training healthcare professionals for Mass Casualty Incidents (MCI) through immersive, text-based simulations. It simulates real-time triage, treatment, and transport scenarios, helping users make critical decisions under stress. The bot operates within a Discord environment and aims to create an engaging and realistic training tool for professionals in emergency healthcare.
 
+## Table of Contents
+- [Key Features](#key-features)
+- [Latest Changes](#latest-changes)
+- [How It Works](#how-it-works)
+  - [Joining the Demo](#joining-the-demo)
+  - [Game Master Setup](#game-master-setup)
+- [Powering the MCI Bot](#powering-the-mci-bot)
+- [Future Goals](#future-goals)
+- [License](#license)
+
 ## Key Features
 
 - **Interactive Scenarios**: The bot presents various triage, treatment, and transport situations that challenge users to think critically and respond effectively.
