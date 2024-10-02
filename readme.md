@@ -16,7 +16,7 @@ The MCI Bot is designed to assist in training healthcare professionals for Mass 
 <img width="327" alt="thmb" src="https://github.com/user-attachments/assets/13840a5e-3192-4238-a4ee-0c6462eae095">
 
 
-[![Watch the video](https://github.com/user-attachments/assets/ab489e57-ffcb-4d15-9d6d-5815fdaa5652)
+![Watch the video](https://github.com/user-attachments/assets/ab489e57-ffcb-4d15-9d6d-5815fdaa5652)
 
 
 ## Key Features
