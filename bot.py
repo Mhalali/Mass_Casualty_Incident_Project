@@ -36,7 +36,7 @@ hospitals = {
     "Rashid Hospital Trauma Center": "Helicopter pad available, full ER capabilities.",
     "Latifa Hospital": "No helipad, limited ER.",
     "Dubai Hospital": "Helipad available, limited ER.",
-    "Al Jalila Children’s Hospital": "No helipad, ER only for children."
+    "Al Jalila Children?s Hospital": "No helipad, ER only for children."
 }
 
 # GPT response function (focused on playing along naturally)
