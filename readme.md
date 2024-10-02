@@ -45,7 +45,7 @@ The MCI Bot is designed to assist in training healthcare professionals for Mass 
 
 - **Post-Scenario Debriefing**: After each scenario, the bot sends an analysis of the player’s performance, highlighting strengths and areas for improvement. This feedback is sent via PM and saved in a log channel for review.
 
-## Latest Changes
+## Latest Changes 2-Oct-2024
 
 
 - **Removed Time Restrictions**: Players now have more freedom to explore the simulation, ask questions, and make decisions at their own pace without a rigid time limit.
@@ -55,6 +55,14 @@ The MCI Bot is designed to assist in training healthcare professionals for Mass 
 - **Highlight Key Words**: The bot highlights key words (e.g., "victims," "accident type") to make the scenarios more engaging and to help players focus on critical information.
 
 - **Enhanced Commands**: The bot includes additional commands like `!reset` to give facilitators more control over the game flow, allowing them to restart or pause the simulation when needed.
+
+- **Shorter GPT Responses**: The bot now focuses on short, concise summaries.
+  
+- **Three-Strike System**: If inappropriate behavior is detected, the game will provide warnings and reset after 3 strikes.
+  
+- **Inactivity Timer**: A warning is issued at the 10- and 5-second mark if no response is given, and the game resets after 20 seconds of inactivity.
+  
+- **Logs and Reports**: After the game ends (either due to inactivity or a game reset), the session logs and performance analysis are sent to session-logs and report-logs, and the player receives a DM with their performance analysis and a GitHub link
 
 ## How It Works
 
