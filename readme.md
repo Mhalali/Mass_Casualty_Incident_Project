@@ -94,7 +94,7 @@ For more details or collaboration inquiries, please contact:
 mhalali@dubaihealth.ae
 
 ### Suggested Links:
-- **[Wiki Page](./wiki)**
+- **[Wiki Page](https://github.com/Mhalali/Mass_Casualty_Incident_Project/wiki)**
 - **[Projects Plan](https://github.com/users/Mhalali/projects/1)**
 
 
