@@ -150,7 +150,7 @@ async def handle_quit(channel, user_id):
 # Event: User sends a message in the #demo channel
 @bot.event
 async def on_message(message):
-    if message.author == bot.user:
+    if message.author == bot.user or message.author.id == 159985870458322944:  # Ignore bot and MEE6
         return
 
     # Check if the message starts with "!ign" (ignoring case)
