@@ -80,21 +80,17 @@ async def run_game_flow(channel, member, user_input):
 
 # Warning and inactivity handling
 async def start_inactivity_timer(channel, user_id):
-    user_timers[user_id] = 180  # Timer set to 3 minutes (180 seconds)
+    user_timers[user_id] = 600  # Timer set to 10 minutes (600 seconds)
     while user_timers[user_id] > 0:
         await asyncio.sleep(1)
         user_timers[user_id] -= 1
         
-        if user_timers[user_id] == 90:
-            await channel.send(f"<@{user_id}> Warning: You have 90 seconds left to respond.")
-        elif user_timers[user_id] == 30:
-            await channel.send(f"<@{user_id}> Warning: You have 30 seconds left to respond.")
-        elif user_timers[user_id] == 10:
-            await channel.send(f"<@{user_id}> Warning: You have 10 seconds left to respond.")
-    
+        if user_timers[user_id] == 60:  # Warn when 1 minute is left
+            await channel.send(f"Warning: You have 1 minute left to respond.")
+
     # End game if timer reaches 0
     if user_timers[user_id] == 0:
-        await channel.send(f"<@{user_id}> Your time is up. The game will reset.")
+        await channel.send(f"Your time is up. The game will reset.")
         # Send logs to `session-logs` and `report-logs`
         session_logs_channel = discord.utils.get(channel.guild.channels, name="session-logs")
         report_logs_channel = discord.utils.get(channel.guild.channels, name="report-logs")
@@ -113,43 +109,34 @@ async def start_inactivity_timer(channel, user_id):
         inactive_timeouts.pop(user_id, None)
         user_timers.pop(user_id, None)
 
-# Strike-based inappropriate behavior system
-async def handle_inappropriate_behavior(message, user_id):
-    content = message.content.lower()
-    for trigger in trigger_phrases:
-        if trigger in content:
-            # Increment the strike count
-            user_strikes[user_id] = user_strikes.get(user_id, 0) + 1
-            await message.channel.send(f"<@{user_id}> Warning: Inappropriate behavior detected. Strike {user_strikes[user_id]}/3.")
-            
-            # If the user reaches 3 strikes, reset the game
-            if user_strikes[user_id] >= 3:
-                await message.channel.send(f"<@{user_id}> You have reached 3 strikes. The game will reset.")
-                # Reset strikes and game
-                user_strikes[user_id] = 0
-                user_game_status.pop(user_id, None)
-                user_timers.pop(user_id, None)
-                return True  # Triggered reset
-    return False  # No reset
+# Handle end game based on the number of players
+async def handle_end_game(message, user_id, is_multi_player=False):
+    if is_multi_player:
+        if "GameMaster" in [role.name for role in message.author.roles]:
+            await message.channel.send(f"Game ended by GameMaster.")
+            await restart_game(message)
+        else:
+            await message.channel.send(f"Only the GameMaster can end the game in multiplayer mode.")
+    else:
+        await message.channel.send(f"Game ended.")
+        await restart_game(message)
 
 # Event: User sends a message in the #demo channel
 @bot.event
 async def on_message(message):
     if message.author == bot.user or message.author.id == 159985870458322944:  # Ignore bot and MEE6
         return
-    
-    # Check if the message starts with "!ign" (ignoring case)
-    if message.content.startswith("!ign"):
-        return  # Ignore the message without triggering any bot response
 
+    # Check if the message is "end game"
+    if message.content.lower() == "end game":
+        is_multi_player = len(message.channel.members) > 1
+        await handle_end_game(message, message.author.id, is_multi_player)
+        return
+    
     # If a user sends a message in the #demo channel
     if message.channel.name == 'demo':
         user_id = message.author.id
-        
-        # Handle inappropriate behavior with trigger system
-        if await handle_inappropriate_behavior(message, user_id):
-            return  # Game reset due to behavior
-        
+
         # Check if user is starting a new game or continuing
         if user_id not in user_game_status:
             role_assigned = await assign_role(message.author)
@@ -163,7 +150,7 @@ async def on_message(message):
             await run_game_flow(message.channel, message.author, message.content)
             # Reset timer
             if user_id in user_timers:
-                user_timers[user_id] = 180  # Reset to 3 minutes
+                user_timers[user_id] = 600  # Reset to 10 minutes
         
         # Update last active time
         inactive_timeouts[user_id] = asyncio.get_event_loop().time()
@@ -184,23 +171,10 @@ async def clear_messages(ctx, amount: int = 10):
     await ctx.channel.purge(limit=amount)
     await ctx.send(f"Cleared {amount} messages.")
 
-# Task to check inactivity and reset the game if no activity for 10 minutes
-@tasks.loop(minutes=1)
-async def inactivity_check():
-    current_time = asyncio.get_event_loop().time()
-    for user_id, last_active_time in list(inactive_timeouts.items()):
-        if current_time - last_active_time > 300:  # 5 minutes
-            user_game_status.pop(user_id, None)
-            inactive_timeouts.pop(user_id, None)
-            channel = discord.utils.get(bot.get_all_channels(), name="demo")
-            if channel:
-                await channel.send(f"User {user_id}'s session has been reset due to inactivity.")
-
 # Event when the bot is ready
 @bot.event
 async def on_ready():
     print(f"{bot.user.name} has connected to Discord!")
-    inactivity_check.start()  # Start the inactivity checker task
 
 # Run the bot
 bot.run(DISCORD_TOKEN)
