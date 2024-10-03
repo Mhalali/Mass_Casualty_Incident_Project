@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 import os
 import openai
 import asyncio
+import azure.cognitiveservices.speech as speechsdk
 from dotenv import load_dotenv
 import random
 
@@ -10,6 +11,8 @@ import random
 load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+AZURE_SPEECH_KEY = os.getenv('AZURE_SPEECH_KEY')
+AZURE_REGION = os.getenv('AZURE_REGION')
 
 # Set up OpenAI API key
 openai.api_key = OPENAI_API_KEY
@@ -29,16 +32,8 @@ user_timers = {}  # Track timers for warnings and resets
 user_strikes = {}  # Track user strikes for inappropriate behavior
 interaction_logs = {}  # To store complete interaction for session logs
 
-# Inappropriate triggers that will count towards strikes (quit removed from this)
+# Inappropriate triggers that will count towards strikes
 trigger_phrases = ["nap", "ignore", "kill all"]
-
-# Hospital setup
-hospitals = {
-    "Rashid Hospital Trauma Center": "Helicopter pad available, full ER capabilities.",
-    "Latifa Hospital": "No helipad, limited ER.",
-    "Dubai Hospital": "Helipad available, limited ER.",
-    "Al Jalila Children’s Hospital": "No helipad, ER only for children."
-}
 
 # GPT response function (focused on playing along naturally)
 def generate_gpt_response(user_input, game_status):
@@ -56,6 +51,19 @@ def generate_gpt_response(user_input, game_status):
         print(f"OpenAI API error: {e}")
         return "There was an error generating a response."
 
+# Function to transcribe speech to text using Azure
+def transcribe_speech_to_text(audio_file):
+    speech_config = speechsdk.SpeechConfig(subscription=AZURE_SPEECH_KEY, region=AZURE_REGION)
+    audio_config = speechsdk.AudioConfig(filename=audio_file)
+    speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
+
+    result = speech_recognizer.recognize_once()
+    
+    if result.reason == speechsdk.ResultReason.RecognizedSpeech:
+        return result.text
+    else:
+        return "Sorry, I couldn't understand the audio."
+
 # Assign roles to new players
 async def assign_role(member):
     available_roles = ["Commander", "Triage Leader", "Transport Leader", "Safety Officer", "Treatment Leader"]
@@ -66,27 +74,6 @@ async def assign_role(member):
         await member.add_roles(role)
         return assigned_role
     return None
-
-# MCI or False Alarm check
-async def mci_or_false_alarm_check(channel, user_id):
-    mci_thresholds = {
-        "victims": 10,
-        "deaths": 6,
-        "critical_injuries": 10
-    }
-
-    # Simulating uncertainty in victim numbers
-    reported_victims = random.randint(8, 15)
-    reported_deaths = random.randint(4, 8)
-    reported_critical_injuries = random.randint(5, 12)
-
-    # Players need to ask questions about what they are seeing
-    await channel.send(f"You see {reported_victims} victims, {reported_deaths} deaths, and {reported_critical_injuries} critically injured patients. What do you think? Is this an MCI or a false alarm?")
-    
-    if reported_victims >= mci_thresholds["victims"] or reported_deaths >= mci_thresholds["deaths"] or reported_critical_injuries >= mci_thresholds["critical_injuries"]:
-        await channel.send("This is a Mass Casualty Incident (MCI). Proceed with the MCI protocol.")
-    else:
-        await channel.send("This might be a false alarm. Proceed with caution and reassess the situation.")
 
 # Organic game flow without predefined stages
 async def run_game_flow(channel, member, user_input):
@@ -162,28 +149,30 @@ async def on_message(message):
         await handle_quit(message.channel, message.author.id)
         return
 
-    # Handle debrief based on roles
-    if message.channel.name == 'demo':
-        user_id = message.author.id
-
-        if user_id not in user_game_status:
-            role_assigned = await assign_role(message.author)
-            user_game_status[user_id] = "A severe accident with 3 cars and 5 victims. We need to allocate a safe zone immediately."
+    # If a user sends a voice message in the #demo channel
+    if message.channel.name == 'demo' and message.attachments:
+        voice_file = message.attachments[0]
+        
+        if voice_file.filename.endswith(".wav") or voice_file.filename.endswith(".mp3"):
+            await message.channel.send("Analyzing the audio...")  # Inform the player that analysis is in progress
             
-            if role_assigned == "Safety Officer":
-                await message.channel.send(f"Welcome, {message.author.mention}, to the MCI Simulation Demo! You are assigned as **{role_assigned}**. Your role involves ensuring safety zones are established.")
-            else:
-                await message.channel.send(f"Welcome, {message.author.mention}, to the MCI Simulation Demo! You are assigned as **{role_assigned}**. GPT will assist in roles not assigned to players.")
+            # Download the audio file locally
+            await voice_file.save(f"./{voice_file.filename}")
             
-            # After debrief, perform MCI or False Alarm check
-            await mci_or_false_alarm_check(message.channel, user_id)
+            # Transcribe the audio
+            transcription = transcribe_speech_to_text(voice_file.filename)
             
-            await start_inactivity_timer(message.channel, user_id)
-        else:
-            await run_game_flow(message.channel, message.author, message.content)
-
+            # Handle transcription with GPT response
+            await message.channel.send(f"Transcription: {transcription}")
+            await handle_transcription(message, transcription)
+        
     await bot.process_commands(message)
-   
+
+# Handle transcription with GPT
+async def handle_transcription(message, transcription):
+    gpt_response = generate_gpt_response(transcription, user_game_status.get(message.author.id, ""))
+    await message.channel.send(f"**GPT Response**: {gpt_response}")
+
 # Command to restart the game
 @bot.command(name='restart')
 async def restart_game(ctx):
@@ -194,8 +183,11 @@ async def restart_game(ctx):
 # Command to clear messages
 @bot.command(name='clear')
 async def clear_messages(ctx, amount: int = 10):
-    await ctx.channel.purge(limit=amount)
-    await ctx.send(f"Cleared {amount} messages.")
+    if ctx.author.guild_permissions.administrator:
+        await ctx.channel.purge(limit=amount)
+        await ctx.send(f"Cleared {amount} messages.")
+    else:
+        await ctx.send("You don't have permission to use this command.")
 
 # Event when the bot is ready
 @bot.event
