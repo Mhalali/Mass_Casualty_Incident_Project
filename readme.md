@@ -92,13 +92,17 @@ The MCI Bot is powered by:
 - **OpenAI GPT API**: Provides advanced NLP to create dynamic and realistic conversational experiences during the simulation.
 - **Raspberry Pi**: The bot runs on a Raspberry Pi for low-cost, continuous operation with minimal resource consumption.
 
-## Future Goals
+## Alpha-v1.0 Overview
+The Alpha-v1.0 release focuses on key enhancements for the MCI bot, including:
+- Push-to-talk integration using Azure Speech-to-Text.
+- Enhanced conversational ability with better natural language processing (NLP).
+- Refactored game flow and improved player response timing.
+- Code refactoring for ease of future updates.
 
-- **Voice Integration**: While the current version is text-based, we plan to reintroduce voice functionality using Azure’s Speech Services for a fully voice-activated experience.
-  
-- **Biometric Sensor Integration**: Exploring the possibility of integrating biometric data (e.g., heart rate) into the game using health applications or sensors.
+### Features:
+- Real-time voice interaction for immersive gameplay.
+- Scenario-based progression, allowing players to make decisions without being rushed.
 
-- **Expanded Scenarios**: Additional scenarios focusing on different types of emergencies and more roles for users to take on during training.
 
 ## License [![License](https://img.shields.io/badge/license-Proprietary-red)](./LICENSE)
 This project is proprietary. You may not use, distribute, or modify this project without explicit permission from the owner.
