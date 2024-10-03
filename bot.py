@@ -127,6 +127,10 @@ async def on_message(message):
     if message.author == bot.user or message.author.id == 159985870458322944:  # Ignore bot and MEE6
         return
 
+     # Check if the message starts with "!ign" (ignoring case)
+    if message.content.lower().startswith("!ign"):
+        return  # Ignore the message without triggering any bot response
+
     # Check if the message is "end game"
     if message.content.lower() == "end game":
         is_multi_player = len(message.channel.members) > 1
