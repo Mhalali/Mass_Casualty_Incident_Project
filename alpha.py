@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 import os
 import openai
 import asyncio
+import azure.cognitiveservices.speech as speechsdk
 from dotenv import load_dotenv
 import random
 
@@ -22,6 +23,7 @@ intents.messages = True
 intents.message_content = True
 intents.guilds = True
 intents.members = True  # Required for assigning roles
+intents.voice_states = True  # Required for voice handling
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Dictionary to track user's current game stage, start time, and strikes
@@ -56,6 +58,18 @@ def generate_gpt_response(user_input, game_status):
     except Exception as e:
         print(f"OpenAI API error: {e}")
         return "There was an error generating a response."
+
+# Function to transcribe speech to text using Azure
+def transcribe_speech_to_text(file_path):
+    speech_config = speechsdk.SpeechConfig(subscription=AZURE_SPEECH_KEY, region=AZURE_REGION)
+    audio_input = speechsdk.AudioConfig(filename=file_path)
+    speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_input)
+
+    result = speech_recognizer.recognize_once()
+    if result.reason == speechsdk.ResultReason.RecognizedSpeech:
+        return result.text
+    else:
+        return "Sorry, I couldn't understand that."
 
 # Assign roles to new players
 async def assign_role(member):
@@ -110,6 +124,28 @@ async def start_inactivity_timer(channel, user_id):
         user_game_status.pop(user_id, None)
         inactive_timeouts.pop(user_id, None)
         user_timers.pop(user_id, None)
+
+# Voice command to join a voice channel
+@bot.command(name='join')
+async def join(ctx):
+    if not ctx.message.author.voice:
+        await ctx.send("You are not in a voice channel.")
+        return
+
+    channel = ctx.message.author.voice.channel
+    await channel.connect()
+
+# Voice command to leave a voice channel
+@bot.command(name='leave')
+async def leave(ctx):
+    if ctx.voice_client:
+        await ctx.guild.voice_client.disconnect()
+
+# Listening and transcribing audio when user speaks
+async def listen_and_transcribe(voice_client, file_path):
+    voice_client.listen()  # This is a placeholder; actual implementation to record voice is required.
+    transcription = transcribe_speech_to_text(file_path)
+    return transcription
 
 # Handle end game based on the number of players
 async def handle_end_game(message, user_id, is_multi_player=False):
