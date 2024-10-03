@@ -153,6 +153,10 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
+    # Check if the message starts with "!ign" (ignoring case)
+    if message.content.lower().startswith("!ign"):
+        return  # Ignore the message without triggering any bot response
+
     # Simulate "quit" action
     if message.content.lower() == "quit":
         await handle_quit(message.channel, message.author.id)
@@ -179,7 +183,7 @@ async def on_message(message):
             await run_game_flow(message.channel, message.author, message.content)
 
     await bot.process_commands(message)
-
+   
 # Command to restart the game
 @bot.command(name='restart')
 async def restart_game(ctx):
